@@ -1,30 +1,27 @@
 import kotlin.math.abs
 
 fun main() {
-    fun readInputLists(input: List<String>): Pair<MutableList<Int>, MutableList<Int>> {
-        val right = mutableListOf<Int>()
-        val left = mutableListOf<Int>()
-        input.forEach {
-            val splitString = it.split(" ")
-            right.add(splitString.first().toInt())
-            left.add(splitString.last().toInt())
+    fun readInputLists(input: List<String>): Pair<List<Int>, List<Int>> {
+        return input.map { line ->
+            line.split(" ")
+                .filter(String::isNotBlank)
+                .map(String::toInt)
         }
-        return Pair(right, left)
+            .map { it.first() to it.last() }
+            .unzip()
     }
 
     fun part1(input: List<String>): Int {
-
         val (right, left) = readInputLists(input)
-
-        right.sort()
-        left.sort()
-
-        return right.zip(left).sumOf { abs(it.first - it.second) }
+        return right.sorted()
+            .zip(left.sorted())
+            .sumOf { abs(it.first - it.second) }
     }
 
     fun part2(input: List<String>): Int {
         val (right, left) = readInputLists(input)
-        return right.sumOf { rightNum -> rightNum * left.count { leftNum -> rightNum == leftNum } }
+        val leftCounts = left.groupingBy { it }.eachCount()
+        return right.sumOf { it * (leftCounts[it] ?: 0) }
     }
 
     // Or read a large test input from the `src/Day01_test.txt` file:
@@ -34,6 +31,6 @@ fun main() {
 
     // Read the input from the `src/Day01.txt` file.
     val input = readInput("Day01")
-    part1(input).println()
-    part2(input).println()
+    part1(input).println() // 1223326
+    part2(input).println() // 21070419
 }
