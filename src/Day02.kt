@@ -8,40 +8,33 @@ fun main() {
 
     fun isReportSafe(levels: List<Int>) = levels.all { levels.first().sign * it in 1..3 }
 
+    fun neighborDistance(it: List<Int>) = it.zipWithNext { a, b -> a - b }
+
+    fun parseReports(line: String) = line.split(' ').map { it.toInt() }
+
     fun part1(input: List<String>): Int {
-        return input.map { line ->
-            line
-                .split(' ').map { it.toInt() }
-                .zipWithNext { a, b -> a - b }
-        }.count { levels ->
-            isReportSafe(levels)
-        }
+        return input
+            .map(::parseReports)
+            .map(::neighborDistance)
+            .count(::isReportSafe)
     }
 
     fun part2(input: List<String>): Int {
-        val reports = input.map { line -> line.split(' ').map { it.toInt() } }
+        val reports = input.map(::parseReports)
 
-        var safeReports = 0
-        reports.map { it.zipWithNext { a, b -> a - b } }.forEachIndexed { index, levels ->
-            if (isReportSafe(levels) || isReportSafe(levels.subList(1, levels.size))) {
-                ++safeReports
-            } else {
-                val badReportIndex = levels.indexOfFirst { levels.first().sign * it !in 1..3 }
-                val mutList = reports[index].toMutableList()
-                mutList.removeAt(badReportIndex)
-                if (isReportSafe(mutList.zipWithNext { a, b -> a - b })) {
-                    ++safeReports
-                } else {
-                    val otherSide = reports[index].toMutableList()
-                    otherSide.removeAt(badReportIndex + 1)
-                    if (isReportSafe(otherSide.zipWithNext { a, b -> a - b })) {
-                        ++safeReports
-                    }
-                }
-            }
+        val (goods, maybeBad) = reports.partition {
+            val diffLevels = neighborDistance(it)
+            isReportSafe(diffLevels) || isReportSafe(diffLevels.subList(1, diffLevels.size))
         }
 
-        return safeReports
+        val almostGood = maybeBad.count { levels ->
+            val diffLevels = neighborDistance(levels)
+            val badReportIndex = diffLevels.indexOfFirst { diffLevels.first().sign * it !in 1..3 }
+            isReportSafe(neighborDistance(levels.filterIndexed { i, _ -> i != badReportIndex })) ||
+                    isReportSafe(neighborDistance(levels.filterIndexed { i, _ -> i != badReportIndex + 1 }))
+        }
+
+        return goods.size + almostGood
     }
 
     // Or read a large test input from the `src/Day01_test.txt` file:
@@ -51,6 +44,6 @@ fun main() {
 
     // Read the input from the `src/Day01.txt` file.
     val input = readInput(day)
-    part1(input).println()
-    part2(input).println()
+    part1(input).println() // 624
+    part2(input).println() // 658
 }
