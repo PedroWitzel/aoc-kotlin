@@ -1,3 +1,4 @@
+import kotlin.math.pow
 import kotlin.time.measureTime
 
 fun main() {
@@ -5,39 +6,35 @@ fun main() {
     val day = "Day07"
     val test1 = 3749L
     val test2 = 11387L
+    val permutationsCache = emptyMap<Int, List<String>>().toMutableMap()
 
-    fun parseInput(input: List<String>) = input.filter(String::isNotBlank).map { line: String ->
+    fun parseInput(input: List<String>) = input.map { line: String ->
         line.split(':').let { groups ->
             Pair(
                 groups.first().toLong(),
-                groups.last().let { numbers ->
-                    numbers.split(' ').mapNotNull { it.toIntOrNull() }
-                }
+                groups.last().split(' ').mapNotNull { it.toIntOrNull() }
             )
         }
     }
 
-    fun Int.exp(n: Int): Int {
-        var acc = this
-        repeat(n - 1) { acc *= this }
-        return acc
-    }
+    fun Int.pow(n: Int): Int = this.toDouble().pow(n.toDouble()).toInt()
 
-    fun canResolve(values: List<Int>, result: Long, operations: Array<Char>): Boolean {
-        val permutationsCount = operations.size.exp(values.size - 1)
-        return (0..<permutationsCount)
-            .map { i ->
-                i.toString(operations.size).padStart(values.size - 1, '0')
-                    .map { c -> operations[c.digitToInt(operations.size)] }
+    fun canResolve(values: List<Int>, result: Long, operations: Int): Boolean {
+        val permutationsCount = operations.pow(values.size - 1)
+        return permutationsCache
+            .getOrPut(permutationsCount) {
+                (0..<permutationsCount).map { i ->
+                    i.toString(operations).padStart(values.size - 1, '0')
+                }
             }
             .any { ops ->
                 var acc = values.first().toLong()
                 ops.forEachIndexed { i, c ->
                     when (c) {
-                        '+' -> acc += values[i + 1]
-                        '*' -> acc *= values[i + 1]
-                        '|' -> acc = "$acc${values[i + 1]}".toLong()
-                        else -> {}
+                        '0' -> acc += values[i + 1]
+                        '1' -> acc *= values[i + 1]
+                        '2' -> acc = "$acc${values[i + 1]}".toLong()
+                        else -> throw Exception("Unreachable code")
                     }
                 }
                 result == acc
@@ -45,19 +42,17 @@ fun main() {
     }
 
     fun part1(input: List<String>): Long {
-        val operations = arrayOf('+', '*')
         return parseInput(input)
             .filter { (result, values) ->
-                canResolve(values, result, operations)
+                canResolve(values, result, 2)
             }
             .sumOf { (result, _) -> result }
     }
 
     fun part2(input: List<String>): Long {
-        val operations = arrayOf('+', '*', '|')
         return parseInput(input)
             .filter { (result, values) ->
-                canResolve(values, result, operations)
+                canResolve(values, result, 3)
             }
             .sumOf { (result, _) -> result }
     }
