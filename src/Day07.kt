@@ -1,3 +1,5 @@
+import kotlin.time.measureTime
+
 fun main() {
 
     val day = "Day07"
@@ -53,7 +55,6 @@ fun main() {
                 canResolve(values, result, operations)
             }
             .sumOf { (result, _) -> result }
-            .also(::println)
     }
 
     fun part2(input: List<String>): Long {
@@ -63,7 +64,6 @@ fun main() {
                 canResolve(values, result, operations)
             }
             .sumOf { (result, _) -> result }
-            .also(::println)
     }
 
     val testInput = readInput("${day}_test")
@@ -71,6 +71,10 @@ fun main() {
     check(part2(testInput) == test2)
 
     val input = readInput(day)
-    part1(input).also { check(it == 4555081946288L) }.println()
-    part2(input).also { check(it == 227921760109726L) }.println()
+    measureTime {
+        part1(input).also { check(it == 4555081946288L) }.println()
+    }.also { println("Part1 took $it") }
+    measureTime {
+        part2(input).also { check(it == 227921760109726L) }.println()
+    }.also { println("Part2 took $it") }
 }

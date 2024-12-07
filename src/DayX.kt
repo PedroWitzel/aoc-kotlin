@@ -1,3 +1,5 @@
+import kotlin.time.measureTime
+
 fun main() {
 
     val day = "DayXX"
@@ -13,10 +15,16 @@ fun main() {
     }
 
     val testInput = readInput("${day}_test")
-    check(part1(testInput) == test1)
-    check(part2(testInput) == test2)
+    check(part1(testInput).also(::println) == test1)
+    check(part2(testInput).also(::println) == test2)
 
     val input = readInput(day)
-    part1(input).println()
-    part2(input).println()
+
+    measureTime {
+        part1(input).println()
+    }.also { println("Part1 took $it") }
+
+    measureTime {
+        part2(input).println()
+    }.also { println("Part1 took $it") }
 }
