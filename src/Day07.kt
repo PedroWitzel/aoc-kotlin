@@ -25,27 +25,23 @@ fun main() {
 
     fun canResolve(values: List<Int>, result: Long, operations: Array<Char>): Boolean {
         val permutationsCount = operations.size.exp(values.size - 1)
-        val permutations = emptyList<String>().toMutableList()
-        repeat(permutationsCount) { i ->
-            permutations.add(
+        return (0..<permutationsCount)
+            .map { i ->
                 i.toString(operations.size).padStart(values.size - 1, '0')
                     .map { c -> operations[c.digitToInt(operations.size)] }
-                    .joinToString("")
-            )
-        }
-
-        return permutations.any { ops ->
-            var acc = values.first().toLong()
-            ops.forEachIndexed { i, c ->
-                when (c) {
-                    '+' -> acc += values[i + 1]
-                    '*' -> acc *= values[i + 1]
-                    '|' -> acc = (acc.toString() + values[i + 1].toString()).toLong()
-                    else -> {}
-                }
             }
-            result == acc
-        }
+            .any { ops ->
+                var acc = values.first().toLong()
+                ops.forEachIndexed { i, c ->
+                    when (c) {
+                        '+' -> acc += values[i + 1]
+                        '*' -> acc *= values[i + 1]
+                        '|' -> acc = "$acc${values[i + 1]}".toLong()
+                        else -> {}
+                    }
+                }
+                result == acc
+            }
     }
 
     fun part1(input: List<String>): Long {
