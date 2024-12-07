@@ -1,4 +1,10 @@
-enum class Direction(c: Char) {
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.measureTime
+
+enum class Direction(val c: Char) {
     NORTH('^') {
         override fun move(i: Int, j: Int) = Pair(i - 1, j)
         override fun rotateRight() = EAST
@@ -26,28 +32,17 @@ fun main() {
     val test1 = 41
     val test2 = 6
 
-    fun parseMap(input: List<String>) = input.map { line -> line.map { it == '#' } }
+    fun obstaclesMap(input: List<String>) = input.map { line -> line.map { it == '#' } }
 
-    fun pathBlocked(map: List<List<Boolean>>, index: Pair<Int, Int>) = map[index.first][index.second]
+    fun isPathBlocked(map: List<List<Boolean>>, index: Pair<Int, Int>) = map[index.first][index.second]
 
     fun findStart(input: List<String>): Pair<Pair<Int, Int>, Direction> {
         input.forEachIndexed { i, line ->
-            line.forEachIndexed { j, c ->
-                if (c in arrayOf('<', '^', '>', 'v')) {
-                    return Pair(
-                        Pair(i, j), when (c) {
-                            // TODO - there should be a better way for this
-                            '^' -> Direction.NORTH
-                            'v' -> Direction.SOUTH
-                            '>' -> Direction.WEST
-                            '<' -> Direction.EAST
-                            else -> Direction.WEST
-                        }
-                    )
-                }
+            line.indexOfFirst { it == '^' }.also { j ->
+                if (j != -1) return Pair(Pair(i, j), Direction.entries.first { it.c == line[j] })
             }
         }
-        return Pair(Pair(-1, -1), Direction.NORTH)
+        error("Input has always a starting point")
     }
 
     fun isInbound(map: List<List<Boolean>>, position: Pair<Int, Int>) =
@@ -56,7 +51,7 @@ fun main() {
 
     fun part1(input: List<String>): Pair<Int, Set<Pair<Int, Int>>> {
 
-        val blockedPositions = parseMap(input)
+        val blockedPositions = obstaclesMap(input)
         var (guardPosition, direction) = findStart(input)
         val passedPositions = mutableSetOf(guardPosition)
 
@@ -64,7 +59,7 @@ fun main() {
 
             val nextPosition = direction.move(guardPosition.first, guardPosition.second)
 
-            if (isInbound(blockedPositions, nextPosition) && pathBlocked(blockedPositions, nextPosition)) {
+            if (isInbound(blockedPositions, nextPosition) && isPathBlocked(blockedPositions, nextPosition)) {
                 direction = direction.rotateRight()
             } else {
                 guardPosition = nextPosition
@@ -85,7 +80,7 @@ fun main() {
             if (!visitedPositions.add(Triple(guardPosition.first, guardPosition.second, direction))) return true
 
             val nextPosition = direction.move(guardPosition.first, guardPosition.second)
-            if (isInbound(map, nextPosition) && pathBlocked(map, nextPosition)) {
+            if (isInbound(map, nextPosition) && isPathBlocked(map, nextPosition)) {
                 direction = direction.rotateRight()
             } else {
                 guardPosition = nextPosition
@@ -95,17 +90,29 @@ fun main() {
     }
 
     fun part2(input: List<String>, passedPosition: Set<Pair<Int, Int>>): Int {
-        val blockedPositions = parseMap(input)
+        val blockedPositions = obstaclesMap(input)
         val (guardStartPosition, direction) = findStart(input)
 
-        return passedPosition
+        val allPossibilities = passedPosition
             .filter { it != guardStartPosition }
             .map {
                 val newBlocker = blockedPositions.map { a -> a.toMutableList() }
                 newBlocker[it.first][it.second] = true
                 newBlocker
             }
-            .count { isInALoop(guardStartPosition, direction, it) }
+
+        val count = AtomicInteger(0)
+        runBlocking(Dispatchers.Default) {
+            allPossibilities.forEach { map ->
+                launch {
+                    isInALoop(guardStartPosition, direction, map).let {
+                        if (it) count.incrementAndGet()
+                    }
+                }
+            }
+        }
+
+        return count.get()
     }
 
     val testInput = readInput("${day}_test")
@@ -114,7 +121,10 @@ fun main() {
     check(part2(testInput, test1Passed).also(::println) == test2)
 
     val input = readInput(day)
-    val (part1Result, passedPositions) = part1(input) // 4903
-    part1Result.also { check(it == 4903) }.println()
-    part2(input, passedPositions).println() // 1911
+
+    measureTime {
+        val (part1Result, passedPositions) = part1(input) // 4903
+        part1Result.also { check(it == 4903) }.println()
+        part2(input, passedPositions).println() // 1911
+    }.also(::println)
 }
