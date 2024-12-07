@@ -1,3 +1,6 @@
+import kotlin.time.measureTime
+
+
 fun main() {
 
     val day = "Day05"
@@ -16,7 +19,7 @@ fun main() {
                     .map { (k, v) -> k to v.map { it.second } }
                     .associate { it.first to it.second },
                 sequence
-                    .filter { it.isNotBlank() }
+                    .filter(String::isNotBlank)
                     .map { pages -> pages.split(',').map { it.toInt() } }
             )
         }
@@ -39,18 +42,12 @@ fun main() {
         return valid
     }
 
-    fun part1(input: List<String>): Int {
-
-        val (dependencies, sequences) = parseInput(input)
-        return sequences
-            .filter { isOrdered(it, dependencies) }
-            .sumOf { it[it.middleIndex()] }
+    fun part1(input: List<List<Int>>): Int {
+        return input.sumOf { it[it.middleIndex()] }
     }
 
-    fun part2(input: List<String>): Int {
-        val (dependencies, sequences) = parseInput(input)
-        return sequences
-            .filter { !isOrdered(it, dependencies) }
+    fun part2(input: List<List<Int>>, dependencies: Map<Int, List<Int>>): Int {
+        return input
             .map {
                 it.sortedWith { a, b ->
                     if (dependencies[a]?.contains(b) == true) -1
@@ -60,11 +57,15 @@ fun main() {
             .sumOf { it[it.middleIndex()] }
     }
 
-    val testInput = readInput("${day}_test")
-    check(part1(testInput) == test1)
-    check(part2(testInput) == test2)
+//    val testInput = readInput("${day}_test")
+//    check(part1(testInput) == test1)
+//    check(part2(testInput) == test2)
 
     val input = readInput(day)
-    part1(input).println() // 6505
-    part2(input).println() // 6897
+    measureTime {
+        val (dependencies, sequences) = parseInput(input)
+        val (goods, bads) = sequences.partition { isOrdered(it, dependencies) }
+        part1(goods).also { check(it == 6505) }.println()
+        part2(bads, dependencies).also { check(it == 6897) }.println()
+    }.also(::println)
 }
