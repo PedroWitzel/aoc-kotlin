@@ -3,28 +3,23 @@ import kotlin.time.measureTime
 data class Position(val x: Int, val y: Int) {
 
     operator fun minus(other: Position) = Position(
-        this.x - other.x,
-        this.y - other.y
+        this.x - other.x, this.y - other.y
     )
 
     operator fun plus(other: Position) = Position(
-        this.x + other.x,
-        this.y + other.y
+        this.x + other.x, this.y + other.y
     )
 
     fun mirrorPositionFrom(other: Position) = (other - this).let { other + it }
 }
 
-data class Antenna(val pos: Position, val c: Char)
 
 data class Antennas(val input: List<String>) {
-    val antennas by lazy {
-        input.flatMapIndexed { i, line ->
-            line.mapIndexedNotNull { j, c ->
-                if (c != '.') Antenna(Position(i, j), c) else null
-            }
-        }.groupBy { it.c }
-    }
+    val antennas = input.flatMapIndexed { i, line ->
+        line.mapIndexedNotNull { j, c ->
+            if (c != '.') c to Position(i, j) else null
+        }
+    }.groupBy({ it.first }, { it.second })
 
     private val bounds = Position(input.size, input.first().length)
 
@@ -41,52 +36,73 @@ data class Antennas(val input: List<String>) {
     }
 }
 
+class Day08 {
+
+    companion object {
+
+        fun oldPart1(input: List<String>): Int {
+            val map = Antennas(input)
+            return map.antennas.values.flatMap { antennas ->
+                antennas.flatMap { antenna ->
+                    antennas
+                        .filterNot { it == antenna }
+                        .map { antenna.mirrorPositionFrom(it) }
+                        .filter { map.isInbound(it) }
+                }
+            }.toSet().size
+        }
+
+        fun part1(input: List<String>): Int {
+            val map = Antennas(input)
+            return buildSet {
+                map.antennas.values.forEach { antennas ->
+                    antennas.forEachIndexed { idx, antenna ->
+                        antennas.drop(idx + 1).forEach {
+                            add(antenna.mirrorPositionFrom(it))
+                            add(it.mirrorPositionFrom(antenna))
+                        }
+                    }
+                }
+            }.count { map.isInbound(it) }
+        }
+
+        fun part2(input: List<String>): Int {
+            val map = Antennas(input)
+            val allAntennas = map.antennas.values.flatten()
+            return map.antennas.values.flatMap { antennas ->
+                antennas.flatMap { antenna ->
+                    antennas.filterNot { it == antenna }.flatMap {
+                        generateSequence(antenna to it) { (origin, dest) ->
+                            val node = origin.mirrorPositionFrom(dest)
+                            if (map.isInbound(node)) dest to node else null
+                        }.map { pos -> pos.second }
+                    }
+                }
+            }.toSet().filterNot { it in allAntennas }.size + allAntennas.size
+        }
+    }
+
+}
+
 fun main() {
 
     val day = "Day08"
     val test1 = 14
     val test2 = 34
 
-    fun part1(input: List<String>): Int {
-        val map = Antennas(input)
-        return map.antennas.values.flatMap { antennas ->
-            antennas.flatMap { antenna ->
-                antennas
-                    .filterNot { it == antenna }
-                    .map { antenna.pos.mirrorPositionFrom(it.pos) }
-                    .filter { map.isInbound(it) }
-            }
-        }.toSet().size
-    }
-
-    fun part2(input: List<String>): Int {
-        val map = Antennas(input)
-        val allAntennas = map.antennas.values.flatMap { a -> a.map { it.pos } }
-        return map.antennas.values.flatMap { antennas ->
-            antennas.flatMap { antenna ->
-                antennas
-                    .filterNot { it == antenna }
-                    .flatMap {
-                        generateSequence(antenna.pos to it.pos) { (origin, dest) ->
-                            val node = origin.mirrorPositionFrom(dest)
-                            if (map.isInbound(node)) dest to node else null
-                        }.map { pos -> pos.second }
-                    }
-            }
-        }.toSet().filterNot { it in allAntennas }.size + allAntennas.size
-    }
-
     val testInput = readInput("${day}_test")
-    check(part1(testInput).also(::println) == test1)
-    check(part2(testInput).also(::println) == test2)
+    check(Day08.part1(testInput).also(::println) == test1)
+    check(Day08.part2(testInput).also(::println) == test2)
 
     val input = readInput(day)
-
     measureTime {
-        part1(input).also { check(it == 320) }.println()
+        Day08.oldPart1(input).also { check(it == 320) }.println()
+    }.also { println("old Part1 took $it") }
+    measureTime {
+        Day08.part1(input).also { check(it == 320) }.println()
     }.also { println("Part1 took $it") }
 
     measureTime {
-        part2(input).also { check(it == 1157) }.println()
+        Day08.part2(input).also { check(it == 1157) }.println()
     }.also { println("Part1 took $it") }
 }
