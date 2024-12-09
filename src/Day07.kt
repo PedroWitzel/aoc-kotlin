@@ -34,7 +34,7 @@ fun main() {
                         '0' -> acc += values[i + 1]
                         '1' -> acc *= values[i + 1]
                         '2' -> acc = "$acc${values[i + 1]}".toLong()
-                        else -> throw Exception("Unreachable code")
+                        else -> error("Unreachable code: $c is not inside the range of operations (<$operations)")
                     }
                 }
                 result == acc
