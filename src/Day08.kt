@@ -1,18 +1,5 @@
 import kotlin.time.measureTime
 
-data class Position(val x: Int, val y: Int) {
-
-    operator fun minus(other: Position) = Position(
-        this.x - other.x, this.y - other.y
-    )
-
-    operator fun plus(other: Position) = Position(
-        this.x + other.x, this.y + other.y
-    )
-
-    fun mirrorPositionFrom(other: Position) = (other - this).let { other + it }
-}
-
 
 data class Antennas(val input: List<String>) {
     val antennas = input.flatMapIndexed { i, line ->

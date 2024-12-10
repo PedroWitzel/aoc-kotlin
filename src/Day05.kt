@@ -36,7 +36,7 @@ fun main() {
                 val previousSlice = sequence.subList(0, index)
                 valid = valid && dependencies[i]?.all { dep: Int ->
                     !previousSlice.contains(dep)
-                } ?: true
+                } != false
             }
         }
         return valid
