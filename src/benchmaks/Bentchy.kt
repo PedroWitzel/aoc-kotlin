@@ -1,6 +1,6 @@
 package benchmaks
 
-import Day10
+import Day11
 import kotlinx.benchmark.*
 import org.openjdk.jmh.annotations.Benchmark
 import org.openjdk.jmh.annotations.Setup
@@ -14,7 +14,7 @@ import readInput
 @State(Scope.Benchmark)
 class Bentchy {
 
-    val day = "Day10"
+    val day = "Day11"
     lateinit var input: List<String>
 
     @Setup
@@ -24,20 +24,17 @@ class Bentchy {
 
 //    @Benchmark
 //    fun oldPart1(): Int {
-//        return Day10.oldPart1(input)
+//        return Day11.oldPart1(input)
 //    }
 
     @Benchmark
-    fun part1(): Int {
-        // 1st: 2039
-        // 2nd(sequence algo): 1609
-        // 3rd(starts on init): 1475
-        return Day10.part1(input)
+    fun part1(): Long {
+        return Day11.part2(input)
     }
 
 //    @Benchmark
 //    fun part2(): Int {
-//        val (_, passedPositions) = Day10.part1(input) // 4903
-//        return Day10.part2(input, passedPositions) //667 -> 419
+//        val (_, passedPositions) = Day11.part1(input) // 4903
+//        return Day11.part2(input, passedPositions) //667 -> 419
 //    }
 }
