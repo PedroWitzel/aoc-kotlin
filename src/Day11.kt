@@ -42,11 +42,7 @@ class Day11 {
             var thisStoneGeneration = 1L
             while (byProduct.isNotEmpty()) {
                 val nextStone = byProduct.removeFirst()
-                thisStoneGeneration += if (secondaryCache.containsKey(nextStone)) {
-                    secondaryCache[nextStone]!!
-                } else {
-                    quantityFromStone(nextStone)
-                }
+                thisStoneGeneration += secondaryCache[nextStone] ?: quantityFromStone(nextStone)
             }
             thisStoneGeneration
         }

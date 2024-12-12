@@ -19,7 +19,7 @@ fun String.md5() = BigInteger(1, MessageDigest.getInstance("MD5").digest(toByteA
  * The cleaner shorthand for printing output.
  */
 fun Any?.println() = println(this)
-fun Any?.debug() = println(this).let { this }
+fun Any?.debug() = this.println().let { this }
 
 data class Position(val x: Int, val y: Int) {
 
@@ -33,10 +33,17 @@ data class Position(val x: Int, val y: Int) {
 
     fun mirrorPositionFrom(other: Position) = (other - this).let { other + it }
 
+    fun isNeighborsWith(other: Position) = (this - other).let { it.x in -1..1 && it.y in -1..1 }
+
     fun neighbors(border: Position): Set<Position> = buildSet {
         if (x > 0) add(Position(x - 1, y))
         if (x < border.x) add(Position(x + 1, y))
         if (y > 0) add(Position(x, y - 1))
         if (y < border.y) add(Position(x, y + 1))
     }
+
+    fun right() = Position(x + 1, y)
+    fun left() = Position(x - 1, y)
+    fun up() = Position(x, y - 1)
+    fun down() = Position(x, y + 1)
 }
