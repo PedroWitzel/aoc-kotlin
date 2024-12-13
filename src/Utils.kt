@@ -7,6 +7,7 @@ import kotlin.io.path.readText
  * Reads lines from the given input txt file.
  */
 fun readInput(name: String) = Path("src/$name.txt").readText().trim().lines()
+fun readInputAsLine(name: String) = Path("src/$name.txt").readText().trim()
 
 /**
  * Converts string to md5 hash.
@@ -19,7 +20,7 @@ fun String.md5() = BigInteger(1, MessageDigest.getInstance("MD5").digest(toByteA
  * The cleaner shorthand for printing output.
  */
 fun Any?.println() = println(this)
-fun Any?.debug() = this.println().let { this }
+fun Any?.debug() = this.println().let { this@debug }
 
 data class Position(val x: Int, val y: Int) {
 
