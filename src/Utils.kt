@@ -32,6 +32,18 @@ data class Position(val x: Int, val y: Int) {
         this.x + other.x, this.y + other.y
     )
 
+    fun mul(times: Int) = Position(
+        this.x * times, this.y * times
+    )
+
+    operator fun div(other: Int) = Position(
+        this.x / other, this.y / other
+    )
+
+    operator fun rem(other: Position) = Position(
+        this.x % other.x, this.y % other.y
+    )
+
     fun mirrorPositionFrom(other: Position) = (other - this).let { other + it }
 
     fun isNeighborsWith(other: Position) = (this - other).let { it.x in -1..1 && it.y in -1..1 }
@@ -47,4 +59,15 @@ data class Position(val x: Int, val y: Int) {
     fun left() = Position(x - 1, y)
     fun up() = Position(x, y - 1)
     fun down() = Position(x, y + 1)
+
+    fun quadrant(border: Position): Int {
+        val midPoint = border / 2
+        return when {
+            x < midPoint.x && y < midPoint.y -> 1
+            x < midPoint.x && y > midPoint.y  -> 2
+            x > midPoint.x  && y < midPoint.y -> 3
+            x > midPoint.x  && y > midPoint.y  -> 4
+            else -> 0
+        }
+    }
 }
