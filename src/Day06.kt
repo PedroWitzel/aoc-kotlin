@@ -4,28 +4,6 @@ import kotlinx.coroutines.runBlocking
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.measureTime
 
-enum class Direction(val c: Char) {
-    NORTH('^') {
-        override fun move(i: Int, j: Int) = Pair(i - 1, j)
-        override fun rotateRight() = EAST
-    },
-    SOUTH('v') {
-        override fun move(i: Int, j: Int) = Pair(i + 1, j)
-        override fun rotateRight() = WEST
-    },
-    WEST('>') {
-        override fun move(i: Int, j: Int) = Pair(i, j - 1)
-        override fun rotateRight() = NORTH
-    },
-    EAST('<') {
-        override fun move(i: Int, j: Int) = Pair(i, j + 1)
-        override fun rotateRight() = SOUTH
-    };
-
-    open fun move(i: Int, j: Int) = Pair(i, j)
-    open fun rotateRight() = this
-}
-
 class Day06 {
     companion object {
         val test1 = 41
