@@ -13,13 +13,25 @@ class Day14 {
             speed = Position(x[4].toInt(), x[5].toInt())
         }
 
-        fun walk(times: Int, border: Position): Robot {
-            position = position + speed.mul(times)
-            position = wrapAt(border)
+        fun step(border: Position) {
+            position = wrapAt(position.x + speed.x, position.y + speed.y, border)
+        }
+
+        fun wrapAt(x: Int, y: Int, border: Position): Position {
+            val x = x % border.x
+            val y = y % border.y
+            return Position(
+                if (x < 0) border.x + x else x,
+                if (y < 0) border.y + y else y
+            )
+        }
+
+        fun walk(seconds: Int, border: Position): Robot {
+            position = (position + speed * seconds).wrapAt(border)
             return this
         }
 
-        fun wrapAt(border: Position): Position = (position % border).let {
+        fun Position.wrapAt(border: Position): Position = (this % border).let {
             Position(
                 if (it.x < 0) border.x + it.x else it.x,
                 if (it.y < 0) border.y + it.y else it.y
@@ -28,7 +40,7 @@ class Day14 {
 
         fun debug(border: Position) {
             val midPoint = border / 2
-            val wrap = wrapAt(border)
+            val wrap = position.wrapAt(border)
             wrap.debug()
             wrap.quadrant(border).debug()
             repeat(border.x) { x ->
@@ -53,7 +65,7 @@ class Day14 {
             return input
                 .asSequence()
                 .map { Robot(it) }
-                .map { it.walk(walkTime, mapSize ) }
+                .map { it.walk(walkTime, mapSize) }
                 .map { it.position.quadrant(mapSize) }
                 .filter { it != 0 }
                 .groupBy { it }
@@ -62,21 +74,22 @@ class Day14 {
                 .fold(1) { acc, it -> acc * it }
         }
 
-        fun areOnDifferentPlaces(robos: Sequence<Robot>): Boolean {
-            val groupingBy = robos.groupingBy { it.position }
-            return groupingBy.eachCount().all { it.value == 1 }
+        fun areOnDifferentPlaces(robos: List<Robot>): Boolean {
+            val testSet = emptySet<Position>().toMutableSet()
+            robos.forEach { robot -> if (testSet.add(robot.position) == false) return false }
+            return true
         }
 
         fun part2(input: List<String>, mapSize: Position): Int {
 
-            var robots = input
-                .asSequence()
-                .map { Robot(it) }
+            val robots = input.map { Robot(it) }
             var walked = 0
 
             while (!areOnDifferentPlaces(robots)) {
                 ++walked
-                robots = robots.map { it.walk(1, mapSize) }
+                robots.forEach {
+                    it.step(mapSize)
+                }
             }
 
             return walked
@@ -89,15 +102,15 @@ fun main() {
     val day = "Day14"
     var mapSize = Position(11, 7)
 
-//    val testInput = readInput("${day}_test")
-//    check(Day14.part1(testInput, mapSize).also(::println) == Day14.TEST1)
+    val testInput = readInput("${day}_test")
+    check(Day14.part1(testInput, mapSize).also(::println) == Day14.TEST1)
 
     mapSize = Position(101, 103)
     val input = readInput(day)
 
-//    measureTime {
-//        Day14.part1(input, mapSize).also { check(it == 214109808)} .println()
-//    }.also { println("Part1 took $it") }
+    measureTime {
+        Day14.part1(input, mapSize).also { check(it == 214109808) }.println()
+    }.also { println("Part1 took $it") }
 
     measureTime {
         Day14.part2(input, mapSize).println()
