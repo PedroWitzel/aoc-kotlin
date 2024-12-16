@@ -30,10 +30,6 @@ data class Position(val x: Int, val y: Int) {
         this.x + other.x, this.y + other.y
     )
 
-    fun mul(times: Int) = Position(
-        this.x * times, this.y * times
-    )
-
     operator fun times(times: Int) = Position(
         this.x * times, this.y * times
     )
@@ -86,24 +82,34 @@ enum class Direction(val c: Char) {
         override fun move(i: Int, j: Int) = Pair(i - 1, j)
         override fun move(position: Position) = Position(position.x - 1, position.y)
         override fun rotateRight() = EAST
+        override fun rotateLeft() = WEST
+        override fun opposite() = SOUTH
     },
     SOUTH('v') {
         override fun move(i: Int, j: Int) = Pair(i + 1, j)
         override fun move(position: Position) = Position(position.x + 1, position.y)
         override fun rotateRight() = WEST
+        override fun rotateLeft() = EAST
+        override fun opposite() = NORTH
     },
     WEST('<') {
         override fun move(i: Int, j: Int) = Pair(i, j - 1)
         override fun move(position: Position) = Position(position.x, position.y - 1)
         override fun rotateRight() = NORTH
+        override fun rotateLeft() = SOUTH
+        override fun opposite() = EAST
     },
     EAST('>') {
         override fun move(i: Int, j: Int) = Pair(i, j + 1)
         override fun move(position: Position) = Position(position.x, position.y + 1)
         override fun rotateRight() = SOUTH
+        override fun rotateLeft() = NORTH
+        override fun opposite() = WEST
     };
 
     open fun move(i: Int, j: Int) = Pair(i, j)
     open fun move(position: Position) = position
     open fun rotateRight() = this
+    open fun rotateLeft() = this
+    open fun opposite(): Direction = this
 }
