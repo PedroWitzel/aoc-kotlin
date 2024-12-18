@@ -1,7 +1,3 @@
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlin.math.pow
 import kotlin.time.measureTime
 
 class Day17 {
@@ -11,7 +7,7 @@ class Day17 {
             override fun doIt(operand: Int, memory: CPU) {
                 val comboOperand = memory.fromComboOperand(operand)
                 // println("$this $operand = ${memory.regA} - combo ope $comboOperand")
-                memory.regA = (memory.regA / 2.0.pow(comboOperand.toDouble())).toLong()
+                memory.regA = (memory.regA.shr(comboOperand.toInt())).toLong()
                 memory.programCounter += 2
             }
         },
@@ -54,7 +50,7 @@ class Day17 {
             override fun doIt(operand: Int, memory: CPU) {
                 val comboOperand = memory.fromComboOperand(operand)
                 // println("$this $operand = ${memory.regA} - combo ope $comboOperand")
-                memory.regB = (memory.regA / 2.0.pow(comboOperand.toDouble())).toLong()
+                memory.regB = (memory.regA.shr(comboOperand.toInt())).toLong()
                 memory.programCounter += 2
             }
         },
@@ -62,7 +58,7 @@ class Day17 {
             override fun doIt(operand: Int, memory: CPU) {
                 val comboOperand = memory.fromComboOperand(operand)
                 // println("$this $operand = ${memory.regA} - combo ope $comboOperand")
-                memory.regC = (memory.regA / 2.0.pow(comboOperand.toDouble())).toLong()
+                memory.regC = (memory.regA.shr(comboOperand.toInt())).toLong()
                 memory.programCounter += 2
             }
         };
@@ -80,7 +76,7 @@ class Day17 {
 
         fun outputsSelf() = outputBuffer == program
 
-        fun looksGood() = program.slice(outputBuffer.indices) == outputBuffer
+        fun matchEnd() = program.subList(program.size - outputBuffer.size, program.size) == outputBuffer
 
         fun fromComboOperand(operand: Int): Long = when (operand) {
             in 0..3 -> operand.toLong()
@@ -116,42 +112,28 @@ class Day17 {
         fun part1(input: List<String>): String {
             val cpu = initCpu(input)
             while (cpu.next()) {
-//                cpu.println()
             }
             return cpu.outputBuffer.joinToString(",")
         }
 
         fun part2(input: List<String>): Long {
             val originalCpu = initCpu(input)
-            var initialA = 8.0.pow(originalCpu.program.size - 1).toLong()
-            var finalA = 8.0.pow(originalCpu.program.size).toLong()
-            var answer = 0L
+            var regA = 1L
 
-//            (initialA..finalA).forEach { regA ->
-//                val cpu = originalCpu.copy(regA = regA)
-//                while (cpu.next()) {
-//                }
-//                if (cpu.outputsSelf()) {
-//                    println(regA)
-//                    return regA
-//                }
-//            }
+            while (true) {
+                val cpu = originalCpu.copy(regA = regA)
+                while (cpu.next()) {
+                }
 
+                if (cpu.outputsSelf()) return regA
 
-            runBlocking(Dispatchers.Default) {
-                (initialA..finalA).forEach { regA ->
-                    launch {
-                        val cpu = originalCpu.copy(regA = regA)
-                        while (cpu.next() && cpu.looksGood()) {
-                        }
-                        if (cpu.outputsSelf()) {
-                            println(regA)
-                            answer = regA
-                        }
-                    }
+                regA = if (cpu.matchEnd()) {
+                    println("$regA - ${cpu.outputBuffer}")
+                    regA.shl(3)
+                } else {
+                    regA + 1
                 }
             }
-            return answer
         }
     }
 }
@@ -160,18 +142,18 @@ fun main() {
 
     val day = "Day17"
 
-//    val testInput = readInput("${day}_test")
-//    check(Day17.part1(testInput).also(::println) == Day17.TEST1)
-//    val test2Input = readInput("${day}_test2")
-//    check(Day17.part2(test2Input).also(::println) == Day17.TEST2)
+    val testInput = readInput("${day}_test")
+    check(Day17.part1(testInput).also(::println) == Day17.TEST1)
+    val test2Input = readInput("${day}_test2")
+    check(Day17.part2(test2Input).also(::println) == Day17.TEST2)
 
     val input = readInput(day)
 
     measureTime {
-        Day17.part1(input).also { it == "2,0,7,3,0,3,1,3,7" }.println()
+        Day17.part1(input).also { check(it == "2,0,7,3,0,3,1,3,7") }.println()
     }.also { println("Part1 took $it") }
 
     measureTime {
-        Day17.part2(input).println()
+        Day17.part2(input).also { check(it == 247839539763386L) }.println()
     }.also { println("Part2 took $it") }
 }
