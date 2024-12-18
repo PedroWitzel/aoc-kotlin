@@ -75,6 +75,8 @@ data class Position(val x: Int, val y: Int) {
             else -> 0
         }
     }
+
+    fun isInbound(border: Position) = x in 0..<border.x && y in 0..<border.y
 }
 
 enum class Direction(val c: Char) {
