@@ -3,31 +3,32 @@ import kotlin.time.measureTime
 
 class Day16 {
 
-    data class Robot(val position: Position, var direction: Direction, var value: Int) {
+    data class Reindeer(
+        val position: Position,
+        val direction: Direction,
+        val value: Int,
+        val pathsToHere: MutableSet<Position> = mutableSetOf(position)
+    ) {
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other !is Reindeer) return false
+            return position == other.position && direction == other.direction
+        }
+
+        override fun hashCode(): Int = 31 * position.hashCode() + direction.hashCode()
 
         fun List<String>.valueOf(pos: Position) = this[pos.x][pos.y]
 
-        fun step(map: List<String>, seenRobots: Map<Position, Robot>): List<Robot> {
+        fun step(map: List<String>): List<Reindeer> {
 
-            fun nextPosition(direction: Direction): Robot? {
+            fun nextPosition(direction: Direction): Reindeer? {
                 val nextPosition = position.walkTo(direction)
-                var nextRobot: Robot? = null
-                if (map.valueOf(nextPosition) != '#') {
+                return if (map.valueOf(nextPosition) != '#') {
                     val nextValue = this.value + if (this.direction == direction) 1 else 1001
-
-                    val alreadySeen = seenRobots[nextPosition]
-                    if (alreadySeen != null) {
-                        if (alreadySeen.value > nextValue) {
-                            alreadySeen.value = nextValue
-                            alreadySeen.direction = direction
-                            nextRobot = alreadySeen
-                        }
-                    } else {
-                        nextRobot = Robot(nextPosition, direction, nextValue)
-                    }
-                }
-
-                return nextRobot
+                    val pathsToThere = this.pathsToHere.toMutableSet().apply { add(nextPosition) }
+                    Reindeer(nextPosition, direction, nextValue, pathsToThere)
+                } else null
             }
 
             return buildList {
@@ -36,32 +37,6 @@ class Day16 {
                 add(nextPosition(direction.rotateLeft()))
             }.filterNotNull()
         }
-
-        fun stepBack(
-            seenRobots: Map<Position, Robot>,
-            seenPositions: Set<Position>,
-            previousRobot: Robot
-        ): List<Robot> {
-
-            fun previousPosition(direction: Direction): Robot? {
-                val nextPosition = position.walkTo(direction)
-                if (nextPosition in seenPositions) return null
-
-                val nextRobot = seenRobots[nextPosition]
-                if (nextRobot == null) return null
-
-                if (value > nextRobot.value || previousRobot.value - nextRobot.value == 2) return nextRobot
-
-                return null
-            }
-
-            return buildList {
-                add(previousPosition(direction))
-                add(previousPosition(direction.rotateRight()))
-                add(previousPosition(direction.rotateLeft()))
-            }.filterNotNull()
-        }
-
     }
 
     companion object {
@@ -82,66 +57,47 @@ class Day16 {
             return start to finish
         }
 
-        fun draw(map: List<String>, path: MutableMap<Position, Robot>, nicePosition: Set<Position>) {
+        fun draw(map: List<String>, path: Set<Reindeer>) {
             map.forEachIndexed { i, line ->
                 line.forEachIndexed { j, ch ->
-                    val pos = Position(i, j)
-                    if (pos in nicePosition) print("[${path[pos]?.value}]".padEnd(8, ' '))
-                    else print("$ch".padEnd(8, ch))
+                    val deer = path.find { it.position == Position(i, j) }
+                    if (deer != null) print("[${deer.value};${deer.pathsToHere.size}]".padEnd(12, ' '))
+                    else print("$ch".padEnd(12, ch))
                 }
                 println("")
             }
             println("")
-
         }
 
         fun solve(map: List<String>): Pair<Int, Int> {
 
             val (start, finish) = findStartAndFinish(map)
 
-            var robot = Robot(start, EAST, 0)
-            val seenRobots = mapOf(robot.position to robot).toMutableMap()
-            val unvisitedRobots = listOf(robot).toMutableList()
-            seenRobots[robot.position] = robot
+            var reindeer = Reindeer(start, EAST, 0)
+            val seenDeer = emptySet<Reindeer>().toMutableSet()
+            val unvisited = listOf(reindeer).toMutableList()
+            var lowestValue = Int.MAX_VALUE
+            val nicePositions = emptySet<Position>().toMutableSet()
 
-            while (unvisitedRobots.isNotEmpty()) {
-                robot = unvisitedRobots.removeFirst()
-                seenRobots[robot.position] = robot
+            while (unvisited.isNotEmpty()) {
 
-                if (robot.position == finish) continue
+                reindeer = unvisited.removeFirst()
 
-                val nextSteps = robot.step(map, seenRobots)
+                if (reindeer.position == finish) {
+                    if (reindeer.value > lowestValue) continue
+                    lowestValue = reindeer.value
+                    nicePositions += reindeer.pathsToHere
+                }
 
-                nextSteps.forEach { seenRobots.getOrPut(it.position) { it } }
+                seenDeer.add(reindeer)
 
-                unvisitedRobots.addAll(nextSteps)
+                val nextSteps = reindeer.step(map)
+                unvisited.addAll(nextSteps.filter { it !in seenDeer })
+                unvisited.sortBy { it.value }
             }
 
-            val finalRobot = seenRobots[finish] ?: return 0 to 0
-            val finalValue = finalRobot.value
-
-            // Part2
-            var previousRobot: Robot = finalRobot
-            var backRobot = finalRobot
-            val unvisitedTraceBack = listOf(backRobot).toMutableList()
-            val nicePosition = emptySet<Position>().toMutableSet()
-
-            while (unvisitedTraceBack.isNotEmpty()) {
-
-                previousRobot = backRobot
-                backRobot = unvisitedTraceBack.removeFirst()
-                backRobot.direction = backRobot.direction.opposite()
-
-                nicePosition.add(backRobot.position)
-                if (backRobot.position == start) continue
-
-                val nextSteps = backRobot.stepBack(seenRobots, nicePosition, previousRobot)
-                unvisitedTraceBack.addAll(nextSteps)
-            }
-//            draw(map, seenRobots, nicePosition)
-
-
-            return finalValue to nicePosition.size
+            val finalRobot = seenDeer.find { it.position == finish } ?: return 0 to 0
+            return finalRobot.value to nicePositions.size
         }
     }
 }
@@ -156,7 +112,9 @@ fun main() {
     val input = readInput(day)
 
     measureTime {
-        Day16.solve(input).also { check(it.first == 114476 && it.second == 503) }.println()
+        Day16.solve(input).also {
+            check(it.first == 114476 && it.second == 508)
+        }.println()
     }.also { println("Part1 took $it") }
 
 }
