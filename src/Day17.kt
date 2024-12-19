@@ -76,7 +76,7 @@ class Day17 {
 
         fun outputsSelf() = outputBuffer == program
 
-        fun matchEnd() = program.subList(program.size - outputBuffer.size, program.size) == outputBuffer
+        fun matchEnd() = program.takeLast(outputBuffer.size) == outputBuffer
 
         fun fromComboOperand(operand: Int): Long = when (operand) {
             in 0..3 -> operand.toLong()
