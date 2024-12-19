@@ -13,11 +13,11 @@ class Day19 {
 
         private fun findPatterFor(towel: String, patterns: Sequence<String>): Boolean {
 
-            var patternUntil = listOf("")
+            var patternUntil = setOf("")
             while (towel !in patternUntil) {
                 patternUntil = patterns
                     .flatMap { pattern -> patternUntil.map { it + pattern } }
-                    .filter { towel.startsWith(it) }.toList()
+                    .filter { towel.startsWith(it) }.toSet()
 
                 if (patternUntil.isEmpty()) return false
             }
