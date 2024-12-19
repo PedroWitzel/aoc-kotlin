@@ -11,22 +11,22 @@ class Day19 {
                 it.first.first().split(",").map { it.trim() }.toMutableSet() to it.second.filter(String::isNotBlank)
             }
 
-        private fun findPatterFor(towel: String, patterns: MutableSet<String>): Boolean {
+        private fun findPatterFor(towel: String, patterns: Sequence<String>): Boolean {
 
             var patternUntil = listOf("")
             while (towel !in patternUntil) {
-                val okPattern = patterns.filter { towel.startsWith(patternUntil + it) }
-                if (okPattern.isEmpty()) return false
-                patternUntil += okPattern
+                patternUntil = patterns
+                    .flatMap { pattern -> patternUntil.map { it + pattern } }
+                    .filter { towel.startsWith(it) }.toList()
+
+                if (patternUntil.isEmpty()) return false
             }
-
             return true
-
         }
 
         fun part1(input: List<String>): Int {
             val (patterns, towels) = parseInput(input)
-            return towels.count { findPatterFor(it, patterns) }.also(::println)
+            return towels.count { findPatterFor(it, patterns.asSequence()) }.also(::println)
         }
 
         fun part2(input: List<String>): Int {
