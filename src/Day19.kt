@@ -6,31 +6,27 @@ class Day19 {
         const val TEST1 = 6
         const val TEST2 = 11
 
-        private fun parseInput(input: List<String>): Pair<List<String>, List<String>> =
+        private fun parseInput(input: List<String>): Pair<MutableSet<String>, List<String>> =
             input.partition { it.contains(",") }.let {
-                it.first.first().split(",").map { it.trim() } to it.second.filter(String::isNotBlank)
+                it.first.first().split(",").map { it.trim() }.toMutableSet() to it.second.filter(String::isNotBlank)
             }
 
-        private fun findPatterFor(towels: List<String>, patterns: List<String>): Boolean {
-            var nextTowels = towels.toMutableList()
-            while (nextTowels.isNotEmpty()) {
-                val towel = nextTowels.removeFirst()
+        private fun findPatterFor(towel: String, patterns: MutableSet<String>): Boolean {
 
-                if (towel in patterns) return true
-
-                val towelWithPattern = patterns.mapNotNull { pattern ->
-                    if (towel.startsWith(pattern)) towel.substring(pattern.length)
-                    else null
-                }
-                nextTowels.addAll(towelWithPattern)
-
+            var patternUntil = listOf("")
+            while (towel !in patternUntil) {
+                val okPattern = patterns.filter { towel.startsWith(patternUntil + it) }
+                if (okPattern.isEmpty()) return false
+                patternUntil += okPattern
             }
-            return false
+
+            return true
+
         }
 
         fun part1(input: List<String>): Int {
             val (patterns, towels) = parseInput(input)
-            return towels.filter { findPatterFor(listOf(it), patterns) }.also { it.println() }.size
+            return towels.count { findPatterFor(it, patterns) }.also(::println)
         }
 
         fun part2(input: List<String>): Int {
@@ -50,7 +46,7 @@ fun main() {
     val input = readInput(day)
 
     measureTime {
-        Day19.part1(input).println()
+        Day19.part1(input).also { check(it > 344) }.println()
     }.also { println("Part1 took $it") }
 
     measureTime {
