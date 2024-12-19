@@ -4,33 +4,31 @@ class Day19 {
 
     companion object {
         const val TEST1 = 6
-        const val TEST2 = 11
+        const val TEST2 = 16L
 
-        private fun parseInput(input: List<String>): Pair<MutableSet<String>, List<String>> =
+        private fun parseInput(input: List<String>): Pair<Set<String>, List<String>> =
             input.partition { it.contains(",") }.let {
                 it.first.first().split(",").map { it.trim() }.toMutableSet() to it.second.filter(String::isNotBlank)
             }
 
-        private fun findPatterFor(towel: String, patterns: Sequence<String>): Boolean {
-
-            var patternUntil = setOf("")
-            while (towel !in patternUntil) {
-                patternUntil = patterns
-                    .flatMap { pattern -> patternUntil.map { it + pattern } }
-                    .filter { towel.startsWith(it) }.toSet()
-
-                if (patternUntil.isEmpty()) return false
+        private fun String.arrangeTowels(towels: Set<String>): Long {
+            val cache = mutableMapOf<Int, Long>()
+            fun options(pos: Int): Long = when {
+                pos == length -> 1
+                else -> cache.getOrPut(pos) {
+                    towels.sumOf { towel ->
+                        if (startsWith(towel, pos)) options(pos + towel.length) else 0
+                    }
+                }
             }
-            return true
+            return options(0)
         }
 
-        fun part1(input: List<String>): Int {
-            val (patterns, towels) = parseInput(input)
-            return towels.count { findPatterFor(it, patterns.asSequence()) }.also(::println)
-        }
-
-        fun part2(input: List<String>): Int {
-            return TEST2
+        fun solve(input: List<String>): Pair<Int, Long> {
+            val (towels, patterns) = parseInput(input)
+            return patterns.map { it.arrangeTowels(towels) }.let {
+                it.count { it > 0 } to it.sumOf { it }
+            }
         }
     }
 }
@@ -40,16 +38,11 @@ fun main() {
     val day = "Day19"
 
     val testInput = readInput("${day}_test")
-    check(Day19.part1(testInput).also(::println) == Day19.TEST1)
-    check(Day19.part2(testInput).also(::println) == Day19.TEST2)
+    check(Day19.solve(testInput).also(::println) == (Day19.TEST1 to Day19.TEST2))
 
     val input = readInput(day)
 
     measureTime {
-        Day19.part1(input).also { check(it > 344) }.println()
+        Day19.solve(input).also { check(it.first == 367) }.println()
     }.also { println("Part1 took $it") }
-
-    measureTime {
-        Day19.part2(input).println()
-    }.also { println("Part2 took $it") }
 }
