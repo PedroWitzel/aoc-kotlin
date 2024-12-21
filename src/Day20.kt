@@ -1,5 +1,4 @@
 import Direction.NORTH
-import kotlin.math.abs
 import kotlin.time.measureTime
 
 class Day20 {
@@ -92,7 +91,6 @@ class Day20 {
                     .eachCount()
         }
 
-        private fun Position.straightDistanceTo(other: Position) = abs(x - other.x) + abs(y - other.y)
         fun part2(map: List<String>, threshold: Int): Int {
 
             val path = getWay(map).map { it.position }

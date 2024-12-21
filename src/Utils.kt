@@ -2,6 +2,7 @@ import java.math.BigInteger
 import java.security.MessageDigest
 import kotlin.io.path.Path
 import kotlin.io.path.readText
+import kotlin.math.abs
 
 /**
  * Reads lines from the given input txt file.
@@ -86,6 +87,9 @@ data class Position(val x: Int, val y: Int) {
     }
 
     fun isInbound(border: Position) = x in 0..<border.x && y in 0..<border.y
+
+    fun straightDistanceTo(other: Position) = abs(x - other.x) + abs(y - other.y)
+
 }
 
 enum class Direction(val c: Char) {
